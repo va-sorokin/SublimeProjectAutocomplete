@@ -11,30 +11,20 @@ from os.path import basename
 MIN_WORD_SIZE = 3
 MAX_WORD_SIZE = 50
 
-MAX_VIEWS = 20
-MAX_WORDS_PER_VIEW = 100
+MAX_FILES = 50
+MAX_WORDS_PER_FILE = 200
 MAX_FIX_TIME_SECS_PER_VIEW = 0.01
 
 
-class AllAutocomplete(sublime_plugin.EventListener):
+class ProjectAutocomplete(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         words = []
 
-        # Limit number of views but always include the active view. This
+        # Limit number of files but always include the active opened file. This
         # view goes first to prioritize matches close to cursor position.
-        other_views = [v for v in sublime.active_window().views() if v.id != view.id]
-        views = [view] + other_views
-        views = views[0:MAX_VIEWS]
-
-        for v in views:
-            if len(locations) > 0 and v.id == view.id:
-                view_words = v.extract_completions(prefix, locations[0])
-            else:
-                view_words = v.extract_completions(prefix)
-            view_words = filter_words(view_words)
-            view_words = fix_truncation(v, view_words)
-            words += [(w, v) for w in view_words]
+        words = get_words_from_view(view, locations)
+        words.extend(get_words_from_files(prefix))
 
         words = without_duplicates(words)
         matches = []
@@ -46,9 +36,21 @@ class AllAutocomplete(sublime_plugin.EventListener):
             matches.append((trigger, contents))
         return matches
 
+def get_words_from_view(view, locations):
+    words = []
+    if len(locations) > 0:
+        view_words = v.extract_completions(prefix, locations[0])
+        view_words = filter_words(view_words)
+        view_words = fix_truncation(v, view_words)
+        words += [(w, v) for w in view_words]
+
+def get_words_from_files(prefix):
+    words = []
+    #TODO: get words from files here
+    return words
 
 def filter_words(words):
-    words = words[0:MAX_WORDS_PER_VIEW]
+    words = words[0:MAX_WORDS_PER_FILE]
     return [w for w in words if MIN_WORD_SIZE <= len(w) <= MAX_WORD_SIZE]
 
 
