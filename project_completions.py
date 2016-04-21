@@ -1,5 +1,5 @@
-# Extends Sublime Text autocompletion to find matches in all open
-# files. By default, Sublime only considers words from the current file.
+# Extends Sublime Text autocompletion to find matches in all files
+# in current project. By default, Sublime only considers words from the current file.
 
 import sublime_plugin
 import sublime
@@ -72,18 +72,18 @@ def get_words_from_file(filename, prefix):
 
 def filter_words(words):
     words = words[0:MAX_WORDS_PER_FILE]
-    return [w for w in words if MIN_WORD_SIZE <= len(w) <= MAX_WORD_SIZE]
+    return [word for word in words if MIN_WORD_SIZE <= len(word) <= MAX_WORD_SIZE]
 
 
 # keeps first instance of every word and retains the original order
-# (n^2 but should not be a problem as len(words) <= MAX_VIEWS*MAX_WORDS_PER_VIEW)
+# (n^2 but should not be a problem as len(words) <= MAX_VIEWS*MAX_WORDS_PER_FILE)
 def without_duplicates(words):
     result = []
     used_words = []
-    for w, v in words:
-        if w not in used_words:
-            used_words.append(w)
-            result.append((w, v))
+    for word, filename in words:
+        if word not in used_words:
+            used_words.append(word)
+            result.append((word, filename))
     return result
 
 
@@ -93,31 +93,31 @@ def fix_truncation(view, words):
     fixed_words = []
     start_time = time.time()
 
-    for i, w in enumerate(words):
+    for i, word in enumerate(words):
         # The word is truncated if and only if it cannot be found with a word boundary before and after
 
         # this fails to match strings with trailing non-alpha chars, like
         # 'foo?' or 'bar!', which are common for instance in Ruby.
-        match = view.find(r'\b' + re.escape(w) + r'\b', 0)
+        match = view.find(r'\b' + re.escape(word) + r'\b', 0)
         truncated = is_empty_match(match)
         if truncated:
             # Truncation is always by a single character, so we extend the word by one word character before a word boundary
             extended_words = []
-            view.find_all(r'\b' + re.escape(w) + r'\w\b', 0, "$0", extended_words)
+            view.find_all(r'\b' + re.escape(word) + r'\w\b', 0, "$0", extended_words)
             if len(extended_words) > 0:
                 fixed_words += extended_words
             else:
                 # to compensate for the missing match problem mentioned above, just
                 # use the old word if we didn't find any extended matches
-                fixed_words.append(w)
+                fixed_words.append(word)
         else:
             # Pass through non-truncated words
-            fixed_words.append(w)
+            fixed_words.append(word)
 
         # if too much time is spent in here, bail out,
         # and don't bother fixing the remaining words
         if time.time() - start_time > MAX_FIX_TIME_SECS_PER_VIEW:
-            return fixed_words + words[i+1:]
+            return fixed_words + words[i + 1:]
 
     return fixed_words
 
