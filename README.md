@@ -24,6 +24,7 @@ DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
 Version 2, December 2004
 
 Copyright (C) 2013 Adrian Lienhard <adrian.lienhard@gmail.com>
+
 Copyright (C) 2016 Vasiliy Sorokin <sorokin.vasiliy@gmail.com>
 
 Everyone is permitted to copy and distribute verbatim or modified
